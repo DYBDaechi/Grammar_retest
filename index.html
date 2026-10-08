@@ -181,7 +181,7 @@ html{-webkit-text-size-adjust:100%}
   <header class="top">
     <div class="brand"><img class="stk-hd" id="stk-hd" alt="">
       <div><h1>문법 <mark>추가문제</mark> 신청</h1>
-      <p>틀린 문법을 골라 담고 신청서를 만들어요 · 유형마다 15문항</p></div>
+      <p>틀린 문법을 골라 담고 신청해요 · 유형마다 15문항</p></div>
     </div>
   </header>
 
@@ -199,7 +199,7 @@ html{-webkit-text-size-adjust:100%}
     <aside class="cart" id="cart" aria-label="담은 문법"></aside>
   </div>
 </div>
-<div class="mbar"><button class="cnt" id="m-cnt" type="button">담은 문법 0개 ▲</button><button class="btn" id="m-go" type="button" disabled>신청서 만들기</button></div>
+<div class="mbar"><button class="cnt" id="m-cnt" type="button">담은 문법 0개 ▲</button><button class="btn" id="m-go" type="button" disabled>신청하기</button></div>
 <div class="modal" id="modal" hidden></div>
 
 <script>
@@ -239,7 +239,7 @@ function renderCart(){
   $('#cart').innerHTML=`<div class="cart-h"><div><b>담은 문법 ${items.length}개</b><div class="tot">총 ${items.length*15}문항</div></div><button class="resetbtn" id="c-reset" type="button" ${items.length?'':'disabled'}>전체 리셋</button></div>
     ${items.length?`<ul class="citems">${items.map(([i,gn])=>`<li><span>${esc(short(TYPES[i].name))}<small>${esc(gn)}</small></span><button class="x" type="button" data-rm="${i}" aria-label="${esc(short(TYPES[i].name))} 빼기">×</button></li>`).join('')}</ul>`
       :'<div class="cempty">아직 담은 문법이 없어요.<br>왼쪽 단원 탭에서 골라 담아 주세요.</div>'}
-    <button class="btn" id="c-go" type="button" ${ready()?'':'disabled'}>신청서 만들기</button>
+    <button class="btn" id="c-go" type="button" ${ready()?'':'disabled'}>신청하기</button>
     ${items.length&&miss.length?`<p class="need">${miss.join('과 ')}을(를) 입력해 주세요</p>`:''}`;
   $('#m-cnt').textContent=`담은 문법 ${items.length}개 ${$('#cart').classList.contains('open')?'▼':'▲'}`;
   $('#m-go').disabled=!ready();
@@ -263,6 +263,12 @@ $('#m-go').addEventListener('click',()=>submit());
 $('#s-name').addEventListener('input',renderCart);
 document.querySelectorAll('input[name=cls]').forEach(r=>r.addEventListener('change',renderCart));
 
+const FORM='https://docs.google.com/forms/d/e/1FAIpQLSfWmpnlx-GRJSine9w3w9N9VKSK3byMgvGfgLP_BdqMXK-iWQ/formResponse';
+const F={name:'entry.1855886737',cls:'entry.30406000',reason:'entry.607849720',code:'entry.462544049'};
+async function sendForm(name,cls,reason,code){
+  const body=new URLSearchParams({[F.name]:name,[F.cls]:cls,[F.reason]:reason==='R'?'재시험':'추가 연습',[F.code]:code});
+  await fetch(FORM,{method:'POST',mode:'no-cors',body});
+}
 function submit(){
   if(!ready())return;
   const name=$('#s-name').value.trim().replace(/\|/g,''), cls=document.querySelector('input[name=cls]:checked').value;
@@ -270,15 +276,24 @@ function submit(){
   const idxs=[...sel].sort((a,b)=>a-b); const code=encode(reason,idxs,newSeed());
   const msg=`문법추가 | ${name} | ${cls} | ${code}`;
   const m=$('#modal'); m.hidden=false; $('#cart').classList.remove('open');
-  m.innerHTML=`<div class="result" role="dialog" aria-modal="true" aria-label="신청서">
-    <div class="result-top"><img class="stk-cheer" src="${STK['3']}" alt=""><div><div style="font-weight:800;font-size:17px">신청서 완성! 끝까지 화이팅 💪</div>
+  document.querySelectorAll('#c-go,#m-go').forEach(b=>b.disabled=true);
+  m.innerHTML=`<div class="result" role="dialog" aria-modal="true" aria-label="신청 결과">
+    <div class="result-top"><img class="stk-cheer" src="${STK['3']}" alt=""><div><div style="font-weight:800;font-size:17px" id="s-state">선생님께 보내는 중…</div>
     <div class="hint">${esc(name)} · ${esc(cls)}</div><div class="code">${code}</div></div></div>
     <div class="chips">${idxs.map(i=>`<span class="chip">${esc(short(TYPES[i].name))}</span>`).join('')}</div>
-    <p style="margin:14px 0 6px;font-weight:600">아래 내용을 복사해서 선생님께 보내면 신청이 끝나요.</p>
-    <div class="msg" id="s-msg">${esc(msg)}</div>
-    <div class="row" style="margin-top:12px;gap:8px;justify-content:space-between"><button class="btn sm" id="s-copy" type="button">복사하기</button><button class="closebtn" id="s-close" type="button">닫기</button></div>
-    <p class="hint" style="margin:8px 0 0">같은 문법을 다시 신청하면 다른 문제로 나와요.</p></div>`;
-  $('#s-copy').onclick=async()=>{try{await navigator.clipboard.writeText(msg);$('#s-copy').textContent='복사됨 ✓';}catch(e){const r=document.createRange();r.selectNodeContents($('#s-msg'));const s=getSelection();s.removeAllRanges();s.addRange(r);$('#s-copy').textContent='선택됨 · 길게 눌러 복사';}};
+    <p style="margin:14px 0 6px;font-weight:600" id="s-sub">잠시만 기다려 주세요.</p>
+    <div class="row" style="margin-top:12px;gap:8px;justify-content:space-between"><button class="btn sm ghost" id="s-copy" type="button">신청 코드 복사</button><button class="closebtn" id="s-close" type="button">닫기</button></div>
+    <p class="hint" style="margin:8px 0 0">혹시 선생님 목록에 이름이 없다고 하면, 위 신청 코드를 복사해서 선생님께 보내 주세요.</p></div>`;
+  $('#s-copy').onclick=async()=>{try{await navigator.clipboard.writeText(msg);$('#s-copy').textContent='복사됨 ✓';}catch(e){$('#s-copy').textContent=code;}};
+  sendForm(name,cls,reason,code).then(()=>{
+    $('#s-state').textContent='신청 완료! 끝까지 화이팅 💪';
+    $('#s-sub').textContent='선생님께 자동으로 전달됐어요. 시험지가 나오면 선생님이 나눠 주실 거예요.';
+    sel.clear(); renderAll();
+  }).catch(()=>{
+    $('#s-state').textContent='전송이 안 됐어요 😢';
+    $('#s-sub').textContent='인터넷 연결을 확인하고 다시 신청하거나, 신청 코드를 복사해서 선생님께 보내 주세요.';
+    renderCart();
+  });
   $('#s-close').onclick=()=>{m.hidden=true;m.innerHTML='';};
   m.onclick=e=>{if(e.target===m){m.hidden=true;m.innerHTML='';}};
   $('#s-copy').focus();
