@@ -243,13 +243,15 @@ function chk(s){let n=0;for(const c of s)n=(n*31+c.charCodeAt(0))%36;return B36[
 function encode(reason, idxs, seed){let m=0n; idxs.forEach(i=>m|=(1n<<BigInt(i)));const body=reason+m.toString(36).toUpperCase();return `GR-${body}-${seed}${chk(body+seed)}`;}
 function newSeed(){let s='';const a=new Uint32Array(4);crypto.getRandomValues(a);for(const v of a)s+=B36[v%36];return s;}
 const refs=t=>t.gs?`본교재 ${esc(t.gs)}`:'';
+/* 짜깁기한 시험지: 번호 구간별 실제 유형 (선생님 페이지 기록과 맞춤) */
+const OVR={'GR-RB8QO-O04YW':[8,9]};
 function decode(code){
   const mm=/^G[SR]-([RP])([0-9A-Z]+)-([0-9A-Z]{4})([0-9A-Z])$/.exec(code); if(!mm)return null;
   const [,reason,mask,seed,c]=mm; if(chk(reason+mask+seed)!==c)return null;
   let m=0n; for(const ch of mask.toLowerCase()) m=m*36n+BigInt(parseInt(ch,36));
   const idxs=[]; for(let i=0;i<TYPES.length;i++) if((m>>BigInt(i))&1n) idxs.push(i);
   if(!idxs.length||(m>>BigInt(TYPES.length))>0n||idxs.some(i=>TYPES[i].hidden))return null;
-  return {reason,idxs,code};
+  return {reason,idxs:OVR[code]||idxs,code};
 }
 const short=n=>n.split(' (')[0];
 
