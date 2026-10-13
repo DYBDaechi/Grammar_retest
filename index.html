@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>문법 추가문제 신청</title>
+<title>문법 추가문제</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap">
@@ -164,6 +164,26 @@ html{-webkit-text-size-adjust:100%}
 .modal{position:fixed;inset:0;background:rgba(18,22,51,.45);display:flex;align-items:flex-start;justify-content:center;padding:calc(24px + env(safe-area-inset-top,0px)) 16px 24px;overflow:auto;z-index:20}
 .modal .result{margin-top:0;max-width:640px;width:100%}
 .closebtn{border:0;background:var(--surface);color:var(--ink);font:700 13px var(--f-ui);padding:8px 14px;border-radius:999px;cursor:pointer}
+/* 모드 탭 + 틀린 번호 체크 */
+.modes{display:flex;gap:6px;background:var(--soft);padding:5px;border-radius:14px;margin:0 0 14px}
+.modes button{flex:1;border:0;background:transparent;color:var(--muted);font:800 15px var(--f-ui);padding:12px 10px;border-radius:10px;cursor:pointer}
+.modes button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(31,43,99,.15)}
+.wv h3{margin:0 0 4px;font-size:18px}
+.wv .sub{margin:0 0 12px;color:var(--muted);font-size:13px}
+#w-code{font-family:var(--f-code);font-size:18px;letter-spacing:.04em;text-transform:uppercase}
+.wmsg{font-size:13px;margin:8px 0 0;color:var(--warn);min-height:1em}
+.wmsg.ok{color:var(--ok)}
+.wsec{margin-top:16px}
+.wsh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:8px}
+.wsh .rng{font-family:var(--f-code);font-size:12px;font-weight:700;background:var(--lav);color:var(--lav-ink);border-radius:999px;padding:2px 9px}
+.wsh b{font-size:15px}.wsh small{color:var(--muted);font-size:12px}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:6px}
+.wn{height:44px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:700 16px var(--f-ui);cursor:pointer;font-variant-numeric:tabular-nums}
+.wn[aria-pressed="true"]{background:var(--pink);border-color:var(--pink-ink);color:var(--pink-ink)}
+.wfoot{position:sticky;bottom:0;margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;box-shadow:0 -4px 16px rgba(31,43,99,.08)}
+.wfoot .wsc{font-size:14px}.wfoot .wsc b{font-size:20px;color:var(--pink-ink)}
+.wrev{margin-top:14px;background:var(--yel);border-radius:12px;padding:12px 14px;font-size:14px}
+.wrev ul{margin:6px 0 0;padding-left:18px}.wrev li{margin:2px 0}
 @media (max-width:900px){
   .picker{grid-template-columns:minmax(0,1fr)}
   .gtabs{flex-direction:row;overflow-x:auto;padding:4px 0 8px;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;scrollbar-width:thin}
@@ -185,15 +205,25 @@ html{-webkit-text-size-adjust:100%}
     </div>
   </header>
 
+  <div class="modes" role="tablist" aria-label="할 일 고르기"><button type="button" role="tab" id="md-a" aria-selected="true">📝 추가문제 신청</button><button type="button" role="tab" id="md-w" aria-selected="false">✅ 틀린 번호 체크</button></div>
+
   <div class="panel info">
     <div class="row">
       <label class="field">이름<input type="text" id="s-name" placeholder="예: 김최선" maxlength="12" autocomplete="off"></label>
       <div class="field">반<div class="seg"><label><input type="radio" name="cls" id="c-1" value="월금반"> 월금반</label><label><input type="radio" name="cls" id="c-2" value="월수반"> 월수반</label><label><input type="radio" name="cls" id="c-3" value="화목반"> 화목반</label></div></div>
-      <div class="field">신청 이유<div class="seg"><label><input type="radio" name="reason" id="r-R" value="R" checked> 통과 못 해서 다시</label><label><input type="radio" name="reason" id="r-P" value="P"> 더 연습하고 싶어서</label></div></div>
+      <div class="field" id="f-reason">신청 이유<div class="seg"><label><input type="radio" name="reason" id="r-R" value="R" checked> 통과 못 해서 다시</label><label><input type="radio" name="reason" id="r-P" value="P"> 더 연습하고 싶어서</label></div></div>
     </div>
   </div>
 
-  <div class="picker">
+  <section class="panel wv" id="wview" hidden style="margin-top:14px">
+    <h3>틀린 번호 체크</h3>
+    <p class="sub">채점 받은 시험지에서 틀린 번호를 눌러 선생님께 보내요. 선생님이 틀린 문제와 같은 유형으로 다시 풀 문제를 만들어 주실 거예요.</p>
+    <label class="field">시험지 코드 <span class="hint">시험지 오른쪽 위에 있는 코드를 그대로 써 주세요</span><input type="text" id="w-code" placeholder="예: GR-R1DVXWQTYX4-V7SGF" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>
+    <p class="wmsg" id="w-msg" aria-live="polite"></p>
+    <div id="w-body"></div>
+  </section>
+
+  <div class="picker" id="picker">
     <nav class="gtabs" id="gtabs" role="tablist" aria-label="문법 단원"></nav>
     <section class="glist" id="glist" role="tabpanel"></section>
     <aside class="cart" id="cart" aria-label="담은 문법"></aside>
@@ -213,6 +243,14 @@ function chk(s){let n=0;for(const c of s)n=(n*31+c.charCodeAt(0))%36;return B36[
 function encode(reason, idxs, seed){let m=0n; idxs.forEach(i=>m|=(1n<<BigInt(i)));const body=reason+m.toString(36).toUpperCase();return `GR-${body}-${seed}${chk(body+seed)}`;}
 function newSeed(){let s='';const a=new Uint32Array(4);crypto.getRandomValues(a);for(const v of a)s+=B36[v%36];return s;}
 const refs=t=>t.gs?`본교재 ${esc(t.gs)}`:'';
+function decode(code){
+  const mm=/^G[SR]-([RP])([0-9A-Z]+)-([0-9A-Z]{4})([0-9A-Z])$/.exec(code); if(!mm)return null;
+  const [,reason,mask,seed,c]=mm; if(chk(reason+mask+seed)!==c)return null;
+  let m=0n; for(const ch of mask.toLowerCase()) m=m*36n+BigInt(parseInt(ch,36));
+  const idxs=[]; for(let i=0;i<TYPES.length;i++) if((m>>BigInt(i))&1n) idxs.push(i);
+  if(!idxs.length||(m>>BigInt(TYPES.length))>0n||idxs.some(i=>TYPES[i].hidden))return null;
+  return {reason,idxs,code};
+}
 const short=n=>n.split(' (')[0];
 
 const gm={};
@@ -299,6 +337,63 @@ function submit(){
   $('#s-copy').focus();
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').hidden){$('#modal').hidden=true;$('#modal').innerHTML='';}});
+/* ---------- 모드 ---------- */
+let mode='a';
+function setMode(m){mode=m;
+  $('#md-a').setAttribute('aria-selected',m==='a'); $('#md-w').setAttribute('aria-selected',m==='w');
+  $('#picker').hidden=m!=='a'; $('#wview').hidden=m!=='w'; $('#f-reason').hidden=m!=='a';
+  document.querySelector('.mbar').style.display=m==='a'?'':'none';
+  if(m==='w')renderW();}
+$('#md-a').onclick=()=>setMode('a'); $('#md-w').onclick=()=>setMode('w');
+
+/* ---------- 틀린 번호 체크 ---------- */
+const PER=15; let WD=null; const WS=new Set();
+function wTypeOf(n){const k=Math.floor((n-1)/PER);return TYPES[WD.idxs[k]];}
+function renderW(){
+  const raw=$('#w-code').value.toUpperCase().replace(/\s+/g,'');
+  const msg=$('#w-msg'); msg.className='wmsg';
+  if(!raw){WD=null;WS.clear();msg.textContent='';$('#w-body').innerHTML='';return;}
+  if(/^CL-/.test(raw)){WD=null;WS.clear();msg.textContent='오답 클리닉 시험지는 번호 체크 없이 선생님께 바로 내 주세요.';$('#w-body').innerHTML='';return;}
+  const d=decode(raw);
+  if(!d){WD=null;WS.clear();msg.textContent=raw.length<14?'':'코드가 맞지 않아요. 시험지 오른쪽 위 코드를 한 글자씩 다시 확인해 주세요. (숫자 0과 영어 O를 헷갈리기 쉬워요)';$('#w-body').innerHTML='';return;}
+  if(!WD||WD.code!==d.code){WS.clear();}
+  WD=d; const total=d.idxs.length*PER;
+  msg.className='wmsg ok'; msg.textContent=`${d.reason==='R'?'재시험':'추가 연습'} · ${total}문항 시험지예요. 틀린 번호를 눌러 주세요.`;
+  const W=[...WS].sort((a,b)=>a-b);
+  const byT={}; W.forEach(n=>{const t=wTypeOf(n);(byT[t.id]=byT[t.id]||{t,list:[]}).list.push(n);});
+  const miss=[]; if(!$('#s-name').value.trim())miss.push('이름'); if(!document.querySelector('input[name=cls]:checked'))miss.push('반');
+  $('#w-body').innerHTML=d.idxs.map((ti,k)=>{const t=TYPES[ti],a=k*PER+1,b=a+PER-1;
+    return `<div class="wsec"><div class="wsh"><span class="rng">${a}~${b}번</span><b>${esc(short(t.name))}</b>${refs(t)?`<small>${refs(t)}</small>`:''}</div>
+      <div class="wgrid">${Array.from({length:PER},(_,j)=>a+j).map(n=>`<button type="button" class="wn" data-n="${n}" aria-pressed="${WS.has(n)}">${n}</button>`).join('')}</div></div>`;}).join('')
+    +(W.length?`<div class="wrev"><b>이 부분을 다시 공부해요</b><ul>${Object.values(byT).map(({t,list})=>`<li>${esc(short(t.name))} · ${list.length}개 (${list.join(', ')}번)${refs(t)?` → ${refs(t)}`:''}</li>`).join('')}</ul></div>`:'')
+    +`<div class="wfoot"><div class="wsc">틀린 문제 <b>${W.length}</b>개 · 점수 ${total-W.length} / ${total}${miss.length?`<div class="hint" style="color:var(--pink-ink)">위에 ${miss.join('과 ')}을(를) 입력해 주세요</div>`:''}</div>
+      <button class="btn" id="w-send" type="button" ${miss.length?'disabled':''}>${W.length?'선생님께 보내기':'다 맞았어요! 보내기'}</button></div>`;
+}
+$('#w-code').addEventListener('input',renderW);
+$('#s-name').addEventListener('input',()=>{if(mode==='w')renderW();});
+document.querySelectorAll('input[name=cls]').forEach(r=>r.addEventListener('change',()=>{if(mode==='w')renderW();}));
+$('#w-body').addEventListener('click',e=>{
+  const b=e.target.closest('.wn'); if(b){const n=+b.dataset.n; WS.has(n)?WS.delete(n):WS.add(n); renderW(); const nb=document.querySelector(`.wn[data-n="${n}"]`); if(nb)nb.focus(); return;}
+  if(e.target.closest('#w-send'))sendW();
+});
+function sendW(){
+  if(!WD)return; const name=$('#s-name').value.trim().replace(/\|/g,''), c=document.querySelector('input[name=cls]:checked'); if(!name||!c)return;
+  const W=[...WS].sort((a,b)=>a-b), total=WD.idxs.length*PER, codeW=`${WD.code} W:${W.join('.')}`;
+  const m=$('#modal'); m.hidden=false; $('#w-send').disabled=true;
+  m.innerHTML=`<div class="result" role="dialog" aria-modal="true" aria-label="보낸 결과">
+    <div class="result-top"><img class="stk-cheer" src="${STK['3']}" alt=""><div><div style="font-weight:800;font-size:17px" id="w-state">선생님께 보내는 중…</div>
+    <div class="hint">${esc(name)} · ${esc(c.value)} · 점수 ${total-W.length} / ${total}</div></div></div>
+    <div class="chips">${W.length?W.map(n=>`<span class="chip">${n}번 · ${esc(short(wTypeOf(n).name))}</span>`).join(''):'<span class="chip">틀린 문제 없음 🎉</span>'}</div>
+    <p style="margin:14px 0 0;font-weight:600" id="w-sub">잠시만 기다려 주세요.</p>
+    <div class="row" style="margin-top:12px;justify-content:flex-end"><button class="closebtn" id="w-close" type="button">닫기</button></div></div>`;
+  sendForm(name,c.value,WD.reason,codeW).then(()=>{
+    $('#w-state').textContent=W.length?'보냈어요! 오답 정리 화이팅 💪':'만점! 정말 잘했어요 🎉';
+    $('#w-sub').textContent=W.length?'선생님이 틀린 문제와 같은 유형으로 다시 풀 문제를 만들어 주실 거예요. 그동안 위에 적힌 교재 쪽을 펴서 오답 정리를 해 두세요.':'선생님께 결과가 전달됐어요.';
+  }).catch(()=>{$('#w-state').textContent='전송이 안 됐어요 😢';$('#w-sub').textContent='인터넷 연결을 확인하고 다시 보내 주세요.';renderW();});
+  $('#w-close').onclick=()=>{m.hidden=true;m.innerHTML='';};
+  m.onclick=e=>{if(e.target===m){m.hidden=true;m.innerHTML='';}};
+}
+
 $('#stk-hd').src=STK['5'];
 renderAll();
 
